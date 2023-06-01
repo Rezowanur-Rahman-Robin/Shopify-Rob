@@ -1,15 +1,15 @@
+import { TitleBar } from "@shopify/app-bridge-react";
 import {
   Card,
-  Page,
-  Layout,
-  TextContainer,
   Image,
-  Stack,
+  Layout,
   Link,
+  Page,
+  Stack,
   Text,
+  TextContainer,
 } from "@shopify/polaris";
-import { TitleBar } from "@shopify/app-bridge-react";
-import { useTranslation, Trans } from "react-i18next";
+import { Trans, useTranslation } from "react-i18next";
 
 import { trophyImage } from "../assets";
 
@@ -22,6 +22,7 @@ export default function HomePage() {
       <TitleBar title={t("HomePage.title")} primaryAction={null} />
       <Layout>
         <Layout.Section>
+        <Text variant="heading4xl" as="h3" color="critical" alignment="center">This is demo by robin</Text>
           <Card sectioned>
             <Stack
               wrap={false}
