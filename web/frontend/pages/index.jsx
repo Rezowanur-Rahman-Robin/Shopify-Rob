@@ -20,7 +20,7 @@ export default function HomePage() {
   const [isOpen,setIsOpen] = useState(false);
   const [selectedProducts,setSelectedProducts] = useState([])
   const [currentProduct,setCurrentProduct] = useState()
-  const [updatedPrice,setUpdatedPrice] = useState("")
+  const [price,setPrice] = useState("")
   const [active, setActive] = useState(false);
 
 
@@ -34,11 +34,18 @@ export default function HomePage() {
 
   const handleUpdate = (item)=>{
     setCurrentProduct(item)
+    setPrice(item?.variants[0].price)
     setActive(true)
   }
 
   const changePriceAction = ()=>{
-    
+    setSelectedProducts(selectedProducts.map(item=>{
+      if(item.id===currentProduct.id){
+        item.variants[0].price = price;
+      }
+      return item;
+    }))
+    setActive(!active)
   }
   
   return (
@@ -90,9 +97,7 @@ export default function HomePage() {
               <div style={{marginTop:10}}>
               <Button  primary onClick={()=> handleUpdate(item)}> Update Price </Button>
               </div>
-
-             
-              
+  
               
             </ResourceItem>
           );
@@ -124,11 +129,8 @@ export default function HomePage() {
           style={{width:"100%",padding:10,margin:10}}
           type='text'
           label="Product Price"
-          value={currentProduct?.variants[0].price}
-        //  onChange={(e) => setCurrentProduct({...currentProduct, variants:currentProduct?.variants.map(item,index)=> {
-        //   if(index===0) item.price=e.target.value
-        //   return item
-        //  }})}
+          value={price}
+          onChange={(e) =>  setPrice(e.target.value)}
           //autoComplete="off"
         />
           </TextContainer>
