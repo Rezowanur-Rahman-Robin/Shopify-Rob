@@ -10,9 +10,9 @@ import {
   TextContainer,
   Thumbnail
 } from "@shopify/polaris";
+import axios from 'axios';
 import { useCallback, useState } from "react";
 import { useTranslation } from "react-i18next";
-
 
 
 export default function HomePage() {
@@ -33,9 +33,11 @@ export default function HomePage() {
   }
 
   const handleUpdate = (item)=>{
+    console.log(item)
     setCurrentProduct(item)
     setPrice(item?.variants[0].price)
     setActive(true)
+
   }
 
   const changePriceAction = ()=>{
@@ -46,6 +48,29 @@ export default function HomePage() {
       return item;
     }))
     setActive(!active)
+
+    
+    const shopifyDomain = 'quick-start-2ecc5be6.myshopify.com';
+    const accessToken = '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';
+    const productId = currentProduct.id;
+  
+    let updatedProductData = currentProduct;
+    updatedProductData.variants[0].price = price;
+    console.log(updatedProductData);
+ 
+  
+    axios.put(`https://${shopifyDomain}/admin/api/2021-09/products/${productId}.json`, updatedProductData, {
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Shopify-Access-Token': accessToken
+      }
+    })
+      .then(response => {
+        console.log('Product updated successfully:', response.data);
+      })
+      .catch(error => {
+        console.error('Error updating product:', error.response.data);
+      });
   }
   
   return (
