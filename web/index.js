@@ -3,10 +3,10 @@ import express from "express";
 import { readFileSync } from "fs";
 import { join } from "path";
 import serveStatic from "serve-static";
-const cors = require('cors');
 
 import GDPRWebhookHandlers from "./gdpr.js";
 import productCreator from "./product-creator.js";
+import productUpdater from "./product-updator.js";
 import shopify from "./shopify.js";
 
 const PORT = parseInt(
@@ -20,7 +20,8 @@ const STATIC_PATH =
     : `${process.cwd()}/frontend/`;
 
 const app = express();
-app.use(cors());
+
+
 
 
 // Set up Shopify authentication and webhook handling
@@ -42,6 +43,12 @@ app.use("/api/*", shopify.validateAuthenticatedSession());
 
 app.use(express.json());
 
+app.get("/api/products", async (_req, res) => {
+  const products = await shopify.api.rest.Product.find({
+    session: res.locals.shopify.session,
+  });
+  res.status(200).send(products);
+});
 app.get("/api/products/count", async (_req, res) => {
   const countData = await shopify.api.rest.Product.count({
     session: res.locals.shopify.session,
@@ -63,20 +70,12 @@ app.get("/api/products/create", async (_req, res) => {
   res.status(status).send({ success: status === 200, error });
 });
 
-app.put("/api/products/:id", async (_req, res) => {
+app.put("/api/products/update", async (req, res) => {
+  const updatedData = req.body; // Assuming you send the updated data in the request body
   let status = 200;
   let error = null;
-
-  let productId = _req.params.id;
-  let data = _req.body;
-  
-
   try {
-    const client = new shopify.clients.Rest({session});
-    const response = await client.put({
-      path: `products/${productId}`,
-      data: body,
-    });
+    await productUpdater(res.locals.shopify.session,req.body);
   } catch (e) {
     console.log(`Failed to process products/update: ${e.message}`);
     status = 500;

@@ -10,9 +10,9 @@ import {
   TextContainer,
   Thumbnail
 } from "@shopify/polaris";
-import axios from 'axios';
 import { useCallback, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { useAppQuery, useAuthenticatedFetch } from '../hooks';
 
 
 export default function HomePage() {
@@ -23,8 +23,17 @@ export default function HomePage() {
   const [price,setPrice] = useState("")
   const [active, setActive] = useState(false);
 
+  const fetch = useAuthenticatedFetch();
 
+  const {data} = useAppQuery({
+    url: `/api/products/count`,
+    reactQueryOptions: {
+      /* Disable refetching because the QRCodeForm component ignores changes to its props */
+      refetchOnReconnect: false,
+    },
+  });
 
+  console.log(data)
 
   const handleChange = useCallback(() => setActive(!active), [active]);  
   const handleSelection=(data)=>{
@@ -40,37 +49,43 @@ export default function HomePage() {
 
   }
 
-  const changePriceAction = ()=>{
-    setSelectedProducts(selectedProducts.map(item=>{
-      if(item.id===currentProduct.id){
-        item.variants[0].price = price;
-      }
-      return item;
-    }))
-    setActive(!active)
-
-    
-    const shopifyDomain = 'quick-start-2ecc5be6.myshopify.com';
-    const accessToken = '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';
-    const productId = currentProduct.id;
-  
-    let updatedProductData = currentProduct;
-    updatedProductData.variants[0].price = price;
-    console.log(updatedProductData);
+  const changePriceAction = async()=>{
+    // setSelectedProducts(selectedProducts.map(item=>{
+    //   if(item.id===currentProduct.id){
+    //     item.variants[0].price = price;
+    //   }
+    //   return item;
+    // }))
  
-  
-    axios.put(`https://${shopifyDomain}/admin/api/2021-09/products/${productId}.json`, updatedProductData, {
-      headers: {
-        'Content-Type': 'application/json',
-        'X-Shopify-Access-Token': accessToken
-      }
-    })
-      .then(response => {
-        console.log('Product updated successfully:', response.data);
-      })
-      .catch(error => {
-        console.error('Error updating product:', error.response.data);
-      });
+
+
+    const productId = currentProduct.id;
+    console.log("Current:",currentProduct.variants[0].price)
+
+    let updatedProductData = {...currentProduct};
+    updatedProductData.variants[0].price = price;
+    console.log("Updated:",updatedProductData.variants[0].price);
+
+    console.log("Current:",currentProduct.variants[0].price)
+ 
+    const response = await fetch(`/api/products/update`,
+    {
+      method:"PUT",
+      headers:{
+        Accept:"application/json",
+        "Content-Type":"application/json",
+      },
+      body:JSON.stringify(updatedProductData)
+    });
+    if(response.ok){
+      console.log(response.data);
+    }
+
+    setActive(!active)
+    // const shopifyDomain = 'quick-start-2ecc5be6.myshopify.com';
+    // const accessToken = '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';
+    
+    
   }
   
   return (

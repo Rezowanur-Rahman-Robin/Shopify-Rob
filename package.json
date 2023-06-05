@@ -13,11 +13,11 @@
   },
   "dependencies": {
     "@shopify/app": "3.46.1",
+    "@shopify/app-bridge": "^3.7.7",
     "@shopify/app-bridge-react": "^3.7.7",
     "@shopify/cli": "3.46.1",
     "@shopify/shopify-api": "^7.2.0",
-    "axios": "^1.4.0",
-    "cors": "^2.8.5"
+    "axios": "^1.4.0"
   },
   "author": "Robin",
   "private": true,
