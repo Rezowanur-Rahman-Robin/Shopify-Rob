@@ -1,42 +1,94 @@
 import { ResourcePicker } from '@shopify/app-bridge-react';
 import {
+  Button,
   LegacyCard,
+  Modal,
   Page,
   ResourceItem,
   ResourceList,
   Text,
+  TextContainer,
   Thumbnail
 } from "@shopify/polaris";
-import { useState } from "react";
+import axios from 'axios';
+import { useCallback, useState } from "react";
 import { useTranslation } from "react-i18next";
-
 
 
 export default function HomePage() {
   const { t } = useTranslation();
   const [isOpen,setIsOpen] = useState(false);
   const [selectedProducts,setSelectedProducts] = useState([])
-  
-  
+  const [currentProduct,setCurrentProduct] = useState()
+  const [price,setPrice] = useState("")
+  const [active, setActive] = useState(false);
+
+
+
+
+  const handleChange = useCallback(() => setActive(!active), [active]);  
   const handleSelection=(data)=>{
     console.log(data?.selection)
     setSelectedProducts(data.selection)
   }
+
+  const handleUpdate = (item)=>{
+    console.log(item)
+    setCurrentProduct(item)
+    setPrice(item?.variants[0].price)
+    setActive(true)
+
+  }
+
+  const changePriceAction = ()=>{
+    setSelectedProducts(selectedProducts.map(item=>{
+      if(item.id===currentProduct.id){
+        item.variants[0].price = price;
+      }
+      return item;
+    }))
+    setActive(!active)
+
+    
+    const shopifyDomain = 'quick-start-2ecc5be6.myshopify.com';
+    const accessToken = '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';
+    const productId = currentProduct.id;
+  
+    let updatedProductData = currentProduct;
+    updatedProductData.variants[0].price = price;
+    console.log(updatedProductData);
+ 
+  
+    axios.put(`https://${shopifyDomain}/admin/api/2021-09/products/${productId}.json`, updatedProductData, {
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Shopify-Access-Token': accessToken
+      }
+    })
+      .then(response => {
+        console.log('Product updated successfully:', response.data);
+      })
+      .catch(error => {
+        console.error('Error updating product:', error.response.data);
+      });
+  }
   
   return (
 
+    <div>
+    
     <Page
     title="Product Selector"
     primaryAction={{
       content:"Select products",
-      onAction:()=> setIsOpen(true)
+      onAction:()=> setIsOpen(!isOpen)
     }}
     >
 
     <ResourcePicker
     resourceType="Product"
     open={isOpen}
-    onCancel={()=> setIsOpen(false)}
+    onCancel={()=> setIsOpen(!isOpen)}
     onSelection={(selectPayload)=> handleSelection(selectPayload)}
     />
 
@@ -45,7 +97,8 @@ export default function HomePage() {
         resourceName={{singular: 'customer', plural: 'customers'}}
         items={selectedProducts}
         renderItem={(item) => {
-          const {id, handle, createdAt,images} = item;
+          const {id, handle, createdAt,images,variants} = item;
+          const price = variants.length>0 ? variants[0].price : "0"
           const media = <Thumbnail
           source={images.length>0? images[0].originalSrc : "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRRtHdjJ9JCfW6pi7Avk5C9qzydumulLV0jB7TusgWAIL-xOyHiaX5pEmMPH62JqGULxkY&usqp=CAU"}
           alt="Black choker necklace"
@@ -63,6 +116,14 @@ export default function HomePage() {
                 {handle}
               </Text>
               <div>Created At:{createdAt}</div>
+
+              <p style={{fontWeight:'bold'}}>{price} $</p>
+              
+              <div style={{marginTop:10}}>
+              <Button  primary onClick={()=> handleUpdate(item)}> Update Price </Button>
+              </div>
+  
+              
             </ResourceItem>
           );
         }}
@@ -70,78 +131,40 @@ export default function HomePage() {
     </LegacyCard>
 
     </Page>
+    <div style={{height: '500px'}}>
+      <Modal
+        //activator={activator}
+        open={active}
+        onClose={handleChange}
+        title="Change Price"
+        primaryAction={{
+          content: 'Update',
+          onAction: changePriceAction,
+        }}
+        secondaryActions={[
+          {
+            content: 'Cancel',
+            onAction: handleChange,
+          },
+        ]}
+      >
+        <Modal.Section>
+          <TextContainer>
+          <input
+          style={{width:"100%",padding:10,margin:10}}
+          type='text'
+          label="Product Price"
+          value={price}
+          onChange={(e) =>  setPrice(e.target.value)}
+          //autoComplete="off"
+        />
+          </TextContainer>
+        </Modal.Section>
+      </Modal>
+    </div>
+    </div>
 
-    // <Page narrowWidth>
-    //   <TitleBar title={t("HomePage.title")} primaryAction={null} />
-    //   <Layout>
-    //     <Layout.Section>
-    //     <Text variant="heading4xl" as="h3" color="critical" alignment="center">This is demo by robin</Text>
-    //       <Card sectioned>
-    //         <Stack
-    //           wrap={false}
-    //           spacing="extraTight"
-    //           distribution="trailing"
-    //           alignment="center"
-    //         >
-    //           <Stack.Item fill>
-    //             <TextContainer spacing="loose">
-    //               <Text as="h2" variant="headingMd">
-    //                 {t("HomePage.heading")}
-    //               </Text>
-    //               <p>
-    //                 <Trans
-    //                   i18nKey="HomePage.yourAppIsReadyToExplore"
-    //                   components={{
-    //                     PolarisLink: (
-    //                       <Link url="https://polaris.shopify.com/" external />
-    //                     ),
-    //                     AdminApiLink: (
-    //                       <Link
-    //                         url="https://shopify.dev/api/admin-graphql"
-    //                         external
-    //                       />
-    //                     ),
-    //                     AppBridgeLink: (
-    //                       <Link
-    //                         url="https://shopify.dev/apps/tools/app-bridge"
-    //                         external
-    //                       />
-    //                     ),
-    //                   }}
-    //                 />
-    //               </p>
-    //               <p>{t("HomePage.startPopulatingYourApp")}</p>
-    //               <p>
-    //                 <Trans
-    //                   i18nKey="HomePage.learnMore"
-    //                   components={{
-    //                     ShopifyTutorialLink: (
-    //                       <Link
-    //                         url="https://shopify.dev/apps/getting-started/add-functionality"
-    //                         external
-    //                       />
-    //                     ),
-    //                   }}
-    //                 />
-    //               </p>
-    //             </TextContainer>
-    //           </Stack.Item>
-    //           <Stack.Item>
-    //             <div style={{ padding: "0 20px" }}>
-    //               <Image
-    //                 source={trophyImage}
-    //                 alt={t("HomePage.trophyAltText")}
-    //                 width={120}
-    //               />
-    //             </div>
-    //           </Stack.Item>
-    //         </Stack>
-    //       </Card>
-    //     </Layout.Section>
-    //     <Layout.Section>
-    //       <ProductsCard />
-    //     </Layout.Section>
-    //   </Layout>
-    // </Page>
+   
+
   );
 }

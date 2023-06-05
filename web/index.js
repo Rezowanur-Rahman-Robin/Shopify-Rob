@@ -1,12 +1,13 @@
 // @ts-check
-import { join } from "path";
-import { readFileSync } from "fs";
 import express from "express";
+import { readFileSync } from "fs";
+import { join } from "path";
 import serveStatic from "serve-static";
+const cors = require('cors');
 
-import shopify from "./shopify.js";
-import productCreator from "./product-creator.js";
 import GDPRWebhookHandlers from "./gdpr.js";
+import productCreator from "./product-creator.js";
+import shopify from "./shopify.js";
 
 const PORT = parseInt(
   process.env.BACKEND_PORT || process.env.PORT || "3000",
@@ -19,6 +20,8 @@ const STATIC_PATH =
     : `${process.cwd()}/frontend/`;
 
 const app = express();
+app.use(cors());
+
 
 // Set up Shopify authentication and webhook handling
 app.get(shopify.config.auth.path, shopify.auth.begin());
@@ -54,6 +57,28 @@ app.get("/api/products/create", async (_req, res) => {
     await productCreator(res.locals.shopify.session);
   } catch (e) {
     console.log(`Failed to process products/create: ${e.message}`);
+    status = 500;
+    error = e.message;
+  }
+  res.status(status).send({ success: status === 200, error });
+});
+
+app.put("/api/products/:id", async (_req, res) => {
+  let status = 200;
+  let error = null;
+
+  let productId = _req.params.id;
+  let data = _req.body;
+  
+
+  try {
+    const client = new shopify.clients.Rest({session});
+    const response = await client.put({
+      path: `products/${productId}`,
+      data: body,
+    });
+  } catch (e) {
+    console.log(`Failed to process products/update: ${e.message}`);
     status = 500;
     error = e.message;
   }
