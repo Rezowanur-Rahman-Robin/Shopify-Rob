@@ -22,7 +22,7 @@ mutation updateProduct($input: ProductInput!) {
 
 export default async function productUpdater(
   session,
-  { id, title, variants,availablePublicationCount,createdAt,descriptionHtml,handle,hasOnlyDefaultVariant,images,productType,publishedAt,status }
+  { id, title, variants }
 ) {
   const client = new shopify.api.clients.Graphql({ session });
 
@@ -34,7 +34,12 @@ export default async function productUpdater(
           input: {
             id,
             title,
-            variants,
+            variants:variants.map((item)=> {
+              let obj = {
+                price: item.price
+              }
+              return obj;
+            }),
           }
         },
       },

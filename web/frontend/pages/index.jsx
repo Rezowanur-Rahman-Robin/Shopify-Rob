@@ -1,6 +1,7 @@
 import { ResourcePicker } from '@shopify/app-bridge-react';
 import {
   Button,
+  Frame,
   LegacyCard,
   Modal,
   Page,
@@ -8,11 +9,12 @@ import {
   ResourceList,
   Text,
   TextContainer,
-  Thumbnail
+  Thumbnail,
+  Toast
 } from "@shopify/polaris";
 import { useCallback, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useAppQuery, useAuthenticatedFetch } from '../hooks';
+import { useAuthenticatedFetch } from '../hooks';
 
 
 export default function HomePage() {
@@ -22,20 +24,26 @@ export default function HomePage() {
   const [currentProduct,setCurrentProduct] = useState()
   const [price,setPrice] = useState("")
   const [active, setActive] = useState(false);
+  const [activeToast, setActiveToast] = useState(false);
 
   const fetch = useAuthenticatedFetch();
 
-  const {data} = useAppQuery({
-    url: `/api/products/count`,
-    reactQueryOptions: {
-      /* Disable refetching because the QRCodeForm component ignores changes to its props */
-      refetchOnReconnect: false,
-    },
-  });
+  // const {data} = useAppQuery({
+  //   url: `/api/products/count`,
+  //   reactQueryOptions: {
+  //     /* Disable refetching because the QRCodeForm component ignores changes to its props */
+  //     refetchOnReconnect: false,
+  //   },
+  // });
 
-  console.log(data)
+  // console.log(data)
 
   const handleChange = useCallback(() => setActive(!active), [active]);  
+  const toggleActive = useCallback(() => setActiveToast((activeToast) => !activeToast), []);
+  const toastMarkup = activeToast ? (
+    <Toast content="Product Price Updated" onDismiss={toggleActive} />
+  ) : null;
+
   const handleSelection=(data)=>{
     console.log(data?.selection)
     setSelectedProducts(data.selection)
@@ -50,13 +58,6 @@ export default function HomePage() {
   }
 
   const changePriceAction = async()=>{
-    // setSelectedProducts(selectedProducts.map(item=>{
-    //   if(item.id===currentProduct.id){
-    //     item.variants[0].price = price;
-    //   }
-    //   return item;
-    // }))
- 
 
 
     const productId = currentProduct.id;
@@ -81,7 +82,15 @@ export default function HomePage() {
       console.log(response.data);
     }
 
+     setSelectedProducts(selectedProducts.map(item=>{
+      if(item.id===currentProduct.id){
+        item.variants[0].price = price;
+      }
+      return item;
+    }))
+
     setActive(!active)
+    setActiveToast(true);
     // const shopifyDomain = 'quick-start-2ecc5be6.myshopify.com';
     // const accessToken = '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';
     
@@ -177,6 +186,12 @@ export default function HomePage() {
         </Modal.Section>
       </Modal>
     </div>
+    <div style={{height: '250px'}}>
+      <Frame>
+          {toastMarkup}
+      </Frame>
+    </div>
+
     </div>
 
    
