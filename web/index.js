@@ -4,10 +4,10 @@ import { readFileSync } from "fs";
 import { join } from "path";
 import serveStatic from "serve-static";
 
-import GDPRWebhookHandlers from "./gdpr.js";
 import productCreator from "./product-creator.js";
 import productUpdater from "./product-updator.js";
 import shopify from "./shopify.js";
+import GDPRWebhookHandlers from "./webhook-handlers.js";
 
 const PORT = parseInt(
   process.env.BACKEND_PORT || process.env.PORT || "3000",
